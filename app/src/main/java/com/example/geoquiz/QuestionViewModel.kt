@@ -6,6 +6,8 @@ class QuestionViewModel : ViewModel() {
 
     var isCheater: Boolean = false
 
+    var cheatCount = 3
+
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
         Question(R.string.question_oceans, true),

@@ -1,7 +1,10 @@
 package com.example.geoquiz
 
+import android.app.ActivityOptions
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -50,13 +53,22 @@ class MainActivity : AppCompatActivity() {
             vm.moveToPrev()
             updateQuestion()
         }
-        btnCheat.setOnClickListener { openCheatActivity() }
+        btnCheat.setOnClickListener { view -> openCheatActivity(view) }
         updateQuestion()
     }
 
-    private fun openCheatActivity() {
+    private fun openCheatActivity(view: View) {
+        if (vm.cheatCount <= 0) {
+            btnCheat.isEnabled = false
+            return
+        }
         val intent = CheatActivity.newIntent(this, vm.currentQuestionAnswer)
-        startActivityForResult(intent, REQUEST_CHEAT_CODE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val options = ActivityOptions.makeClipRevealAnimation(view, 0, 0, view.width, view.height)
+            startActivityForResult(intent, REQUEST_CHEAT_CODE, options.toBundle())
+        } else {
+            startActivityForResult(intent, REQUEST_CHEAT_CODE)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -90,6 +102,9 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CHEAT_CODE && resultCode == RESULT_OK) {
             vm.isCheater = data?.getBooleanExtra(IS_ANSWER_SHOWED, false) ?: false
+            if (vm.isCheater) {
+                vm.cheatCount--
+            }
         }
     }
 }
