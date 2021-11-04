@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 
 class QuestionViewModel : ViewModel() {
 
+    var isCheater: Boolean = false
+
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
         Question(R.string.question_oceans, true),
@@ -21,16 +23,12 @@ class QuestionViewModel : ViewModel() {
         get() = questionBank[currentIndex].textResId
 
     fun moveToNext() {
+        isCheater = false
         currentIndex = (currentIndex + 1) % questionBank.size
     }
 
     fun moveToPrev() {
         if (currentIndex == 0) currentIndex = questionBank.size
         currentIndex--
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        System.out.println("onCleared")
     }
 }

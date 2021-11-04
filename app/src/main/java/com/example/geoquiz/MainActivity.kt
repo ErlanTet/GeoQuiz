@@ -1,7 +1,7 @@
 package com.example.geoquiz
 
+import android.content.Intent
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
 
 private const val KEY_INDEX = "index"
+private const val REQUEST_CHEAT_CODE = 0
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,8 +22,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnFalse: Button
     private lateinit var btnNext: ImageButton
     private lateinit var btnPrev: ImageButton
+    private lateinit var btnCheat: Button
     private lateinit var tvQuestion: TextView
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -34,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         btnFalse = findViewById(R.id.btn_false)
         btnNext = findViewById(R.id.btn_next)
         btnPrev = findViewById(R.id.btn_prev)
+        btnCheat = findViewById(R.id.btn_cheat)
         tvQuestion = findViewById(R.id.tv_question)
 
         tvQuestion.setOnClickListener { vm.moveToNext() }
@@ -47,12 +50,17 @@ class MainActivity : AppCompatActivity() {
             vm.moveToPrev()
             updateQuestion()
         }
+        btnCheat.setOnClickListener { openCheatActivity() }
         updateQuestion()
+    }
+
+    private fun openCheatActivity() {
+        val intent = CheatActivity.newIntent(this, vm.currentQuestionAnswer)
+        startActivityForResult(intent, REQUEST_CHEAT_CODE)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        System.out.println("OnSaveInstanceState")
         outState.putInt(KEY_INDEX, vm.currentIndex)
     }
 
@@ -65,10 +73,10 @@ class MainActivity : AppCompatActivity() {
     private fun checkAnswer(answer: Boolean) {
         isButtonsEnabled(false)
         val correctAnswer = vm.currentQuestionAnswer
-        val messageResId = if (answer == correctAnswer) {
-            R.string.correct
-        } else {
-            R.string.incorrect
+        val messageResId = when {
+            vm.isCheater -> R.string.judgment_toast
+            (answer == correctAnswer) -> R.string.correct
+            else -> R.string.incorrect
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
@@ -78,18 +86,10 @@ class MainActivity : AppCompatActivity() {
         btnFalse.isEnabled = value
     }
 
-    override fun onPause() {
-        super.onPause()
-        System.out.println("onPause")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        System.out.println("onStop")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        System.out.println("onDestroy")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CHEAT_CODE && resultCode == RESULT_OK) {
+            vm.isCheater = data?.getBooleanExtra(IS_ANSWER_SHOWED, false) ?: false
+        }
     }
 }
